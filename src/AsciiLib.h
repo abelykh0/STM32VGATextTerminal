@@ -23,7 +23,7 @@
 #define __AsciiLib_H  
 
 /* Includes ------------------------------------------------------------------*/
-//#include <string.h>
+#include <string.h>
 
 /* Private define ------------------------------------------------------------*/
 //#define  ASCII_8X16_MS_Gothic
