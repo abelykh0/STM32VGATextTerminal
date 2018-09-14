@@ -36,7 +36,7 @@ VGAParamsType VGAParams = {
 	96,     // hSync pulse
 	2,      // vSync pulse
 	135,    // Back porch
-	AsciiLib, // Symbol table
+	(unsigned char*)AsciiLib, // Symbol table
 	80,     // Text resolution of X axis
 	30      // Text resolution of Y axis
 };
@@ -64,7 +64,7 @@ void initPWM(void)
 	// Инициализируем порт для вывода синхро сигналов.
 	GPIO_InitTypeDef PORTA;
 	PORTA.GPIO_Pin = (GPIO_Pin_0 | GPIO_Pin_1 |	// Выходы таймера TIM2... Каналы 1 и 2
-	                  GPIO_Pin_2 | GPIO_Pin_3);  // Выходы таймера TIM5... Каналы 3 и 4
+	                  GPIO_Pin_6 | GPIO_Pin_7);  // Выходы таймера TIM3... Каналы 6 и 7
 	PORTA.GPIO_Mode = GPIO_Mode_AF_PP;
 	PORTA.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init( GPIOA , &PORTA);
@@ -72,7 +72,7 @@ void initPWM(void)
 	// Включаем тактирование таймера TIM2. Отвечает за VSYNC.
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	// Включаем тактирование таймера TIM3. Отвечает за HSYNC.
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
 	//////
 	// Инициализиция TIM2 и ШИМ на первом канале.
@@ -88,7 +88,7 @@ void initPWM(void)
 
 	base_timer.TIM_Period = (hRes * factopr);
 //	base_timer.TIM_Period = SystemCoreClock/4*800;
-	TIM_TimeBaseInit(TIM5, &base_timer);
+	TIM_TimeBaseInit(TIM3, &base_timer);
 
 	// Конфигурирование каналов.
 	TIM_OCInitTypeDef timer_oc;
@@ -96,31 +96,31 @@ void initPWM(void)
 	timer_oc.TIM_Pulse = VGAParams.hSyncPulse * factopr;
 	timer_oc.TIM_OCMode = TIM_OCMode_PWM1;
 	timer_oc.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OC4Init(TIM5, &timer_oc);
+	TIM_OC4Init(TIM3, &timer_oc);
 
 	TIM_OCStructInit(&timer_oc);
 	timer_oc.TIM_Pulse = VGAParams.hBackPorch * factopr;
 	timer_oc.TIM_OCMode = TIM_OCMode_Active;
-	TIM_OC3Init(TIM5, &timer_oc);
+	TIM_OC3Init(TIM3, &timer_oc);
 
-	TIM_SelectSlaveMode(TIM5, TIM_SlaveMode_Reset);
-	// Выбираем вход триггера от TIM2 (ITR0)
-	TIM_SelectInputTrigger(TIM5, TIM_TS_ITR0);
+	TIM_SelectSlaveMode(TIM3, TIM_SlaveMode_Reset);
+	// Выбираем вход триггера от TIM2 (ITR1)
+	TIM_SelectInputTrigger(TIM3, TIM_TS_ITR1);
 
 	/* Включаем прерывание переполнения счётчика */
-	TIM_ITConfig(TIM5, TIM_IT_Update | TIM_IT_CC3, ENABLE);
-	NVIC_SetPriority(TIM5_IRQn, 15);
-	NVIC_EnableIRQ(TIM5_IRQn);
+	TIM_ITConfig(TIM3, TIM_IT_Update | TIM_IT_CC1, ENABLE);
+	NVIC_SetPriority(TIM3_IRQn, 15);
+	NVIC_EnableIRQ(TIM3_IRQn);
 
 //	NVIC_InitTypeDef NVIC_InitStructure;
-//	NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;
+//	NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
 //	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 7;
 //	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 7;
 //	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 //	NVIC_Init(&NVIC_InitStructure);
 
 	//////
-	// Инициализиция TIM5 и ШИМ на первом канале.
+	// Инициализиция TIM3 и ШИМ на первом канале.
 	TIM_TimeBaseStructInit(&base_timer);
 	base_timer.TIM_Prescaler = (uint16_t)(SystemCoreClock/(double)(zh*vRes*10))-1;
 	base_timer.TIM_Period = 10*vRes;
@@ -139,7 +139,7 @@ void initPWM(void)
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 	NVIC_EnableIRQ(TIM2_IRQn);
 
-	TIM_Cmd(TIM5, ENABLE);
+	TIM_Cmd(TIM3, ENABLE);
 	TIM_Cmd(TIM2, ENABLE);
 }
 
@@ -211,13 +211,13 @@ void DMA1_Channel3_IRQHandler() {
 	}
 }
 
-void TIM5_IRQHandler()
+void TIM3_IRQHandler()
 {
-	//	if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET)
-	if ((TIM5->SR & TIM_IT_CC3) != 0)
+	//	if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
+	if ((TIM3->SR & TIM_IT_CC1) != 0)
 	{
-//		TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
-		TIM5->SR = (uint16_t)~TIM_IT_CC3;
+//		TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
+		TIM3->SR = (uint16_t)~TIM_IT_CC1;
 //		DMA_Cmd(DMA1_Channel3, DISABLE);
 //		DMA1_Channel3->CCR &= (uint16_t)(~DMA_CCR1_EN);
 //		DMA_SetCurrDataCounter(DMA1_Channel3, 81);
@@ -226,12 +226,12 @@ void TIM5_IRQHandler()
 		DMA1_Channel3->CCR |= DMA_CCR1_EN;
 	}
 
-//	if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
-	else if ((TIM5->SR & TIM_IT_Update) != 0)
+//	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
+	else if ((TIM3->SR & TIM_IT_Update) != 0)
 	{
 		// Даём знать, что обработали прерывание
-//		TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
-		TIM5->SR = (uint16_t)~TIM_IT_Update;
+//		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+		TIM3->SR = (uint16_t)~TIM_IT_Update;
 
 
 		if (currentBuffer == (uint32_t)lineBuffer1)
