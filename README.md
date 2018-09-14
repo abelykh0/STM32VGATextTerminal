@@ -21,5 +21,5 @@ it is changed to build under Atollic TrueStudio 9.0.
 | --- | ----------- | ---------- | ------ |
 | PA7 | Green | Resistor 280 Ohm | VGA green (2)
 | PA6 | HSync | | VGA HSync (13)
-| PA1 | VSync | | VGA VSync (14)
+| PA0 | VSync | | VGA VSync (14)
 | G | Ground | | VGA Ground (5,6,7,8,10)
