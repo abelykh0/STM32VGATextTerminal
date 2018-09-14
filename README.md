@@ -6,7 +6,7 @@ to output text information to monitors with a VGA interface. Supported
 resolution of 640x480 in monochrome, the font size is 8x16, which allows
 for 80x30 characters.
 
-Link: https://github.com/vasyaod/STM32VGATextTerminal
+Link: http://vasyaod-blog.tumblr.com/post/34422942376/stm32-vga-text-terminal
 
 Author: vasyaod (vasyaod@mail.ru)
 
