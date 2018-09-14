@@ -10,7 +10,7 @@ Link: https://github.com/vasyaod/STM32VGATextTerminal
 
 Author: vasyaod (vasyaod@mail.ru)
 
-#Changes compared to the original project
+## Changes compared to the original project
 
 The project is modified to support STM32F103C8, which doesn't have TIM5. Also,
 it is changed to build under Atollic TrueStudio 9.0.
