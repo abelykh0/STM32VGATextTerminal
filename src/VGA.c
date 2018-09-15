@@ -49,22 +49,21 @@ uint8_t *VGAScreenBuffer;
 void initPWM(void)
 {
 	// Включает тактирование порта для вывода синхро сигналов.
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC , ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB , ENABLE);
 
 	// Инициализируем порт для вывода синхро сигналов.
-	GPIO_InitTypeDef PORTC;
-	PORTC.GPIO_Pin = (GPIO_Pin_0);
-	PORTC.GPIO_Mode = GPIO_Mode_Out_PP;
-	PORTC.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init( GPIOC , &PORTC);
+	GPIO_InitTypeDef PORTB;
+	PORTB.GPIO_Pin = (GPIO_Pin_1); // PB1 - HSync (TIM3 CH4)
+	PORTB.GPIO_Mode = GPIO_Mode_AF_PP;
+	PORTB.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init( GPIOB , &PORTB);
 
 	// Включает тактирование порта для вывода синхро сигналов.
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA , ENABLE);
 
 	// Инициализируем порт для вывода синхро сигналов.
 	GPIO_InitTypeDef PORTA;
-	PORTA.GPIO_Pin = (GPIO_Pin_0 | GPIO_Pin_1 |	// Выходы таймера TIM2... Каналы 1 и 2
-	                  GPIO_Pin_6 | GPIO_Pin_7);  // Выходы таймера TIM3... Каналы 6 и 7
+	PORTA.GPIO_Pin = GPIO_Pin_0; // VSync (TIM2 CH1)
 	PORTA.GPIO_Mode = GPIO_Mode_AF_PP;
 	PORTA.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init( GPIOA , &PORTA);
@@ -108,7 +107,7 @@ void initPWM(void)
 	TIM_SelectInputTrigger(TIM3, TIM_TS_ITR1);
 
 	/* Включаем прерывание переполнения счётчика */
-	TIM_ITConfig(TIM3, TIM_IT_Update | TIM_IT_CC1, ENABLE);
+	TIM_ITConfig(TIM3, TIM_IT_Update | TIM_IT_CC3, ENABLE);
 	NVIC_SetPriority(TIM3_IRQn, 15);
 	NVIC_EnableIRQ(TIM3_IRQn);
 
@@ -172,7 +171,7 @@ void initSPI()
 
 	GPIO_InitTypeDef GPIO_InitStructure;
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA| RCC_APB2Periph_AFIO, ENABLE);
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5 | GPIO_Pin_7;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
@@ -213,11 +212,11 @@ void DMA1_Channel3_IRQHandler() {
 
 void TIM3_IRQHandler()
 {
-	//	if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
-	if ((TIM3->SR & TIM_IT_CC1) != 0)
+	//	if (TIM_GetITStatus(TIM3, TIM_IT_CC3) != RESET)
+	if ((TIM3->SR & TIM_IT_CC3) != 0)
 	{
-//		TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
-		TIM3->SR = (uint16_t)~TIM_IT_CC1;
+//		TIM_ClearITPendingBit(TIM3, TIM_IT_CC3);
+		TIM3->SR = (uint16_t)~TIM_IT_CC3;
 //		DMA_Cmd(DMA1_Channel3, DISABLE);
 //		DMA1_Channel3->CCR &= (uint16_t)(~DMA_CCR1_EN);
 //		DMA_SetCurrDataCounter(DMA1_Channel3, 81);
